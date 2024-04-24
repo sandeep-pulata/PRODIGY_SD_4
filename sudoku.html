@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #00f2ff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 700px;
+            width: 100%;
+            margin: 20px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333333;
+        }
+
+        input[type="text"] {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sudoku Solver</h2>
+
+    <form id="sudokuForm">
+        <table>
+            <tbody id="sudokuGrid">
+                <!-- Sudoku grid will be inserted here -->
+            </tbody>
+        </table>
+        <button type="button" onclick="solveSudoku()">Solve Sudoku</button>
+    </form>
+</div>
+
+<script>
+    function createSudokuGrid() {
+        var sudokuGrid = document.getElementById("sudokuGrid");
+        var html = '';
+        for (var i = 0; i < 9; i++) {
+            html += '<tr>';
+            for (var j = 0; j < 9; j++) {
+                html += `<td><input type="text" id="cell_${i}_${j}" maxlength="1"></td>`;
+            }
+            html += '</tr>';
+        }
+        sudokuGrid.innerHTML = html;
+    }
+
+    function solveSudoku() {
+        var sudokuValues = [];
+        for (var i = 0; i < 9; i++) {
+            sudokuValues.push([]);
+            for (var j = 0; j < 9; j++) {
+                var cellValue = document.getElementById(`cell_${i}_${j}`).value;
+                sudokuValues[i].push(parseInt(cellValue) || 0);
+            }
+        }
+
+        if (!isSudokuValid(sudokuValues)) {
+            alert('Invalid Sudoku. Please make sure all input values are correct.');
+            return;
+        }
+
+        if (solveSudokuHelper(sudokuValues)) {
+            for (var i = 0; i < 9; i++) {
+                for (var j = 0; j < 9; j++) {
+                    document.getElementById(`cell_${i}_${j}`).value = sudokuValues[i][j];
+                }
+            }
+        } else {
+            alert('No solution exists.');
+        }
+    }
+
+    function isSudokuValid(sudokuValues) {
+        // Check if any row, column, or 3x3 grid contains duplicate numbers
+        for (var i = 0; i < 9; i++) {
+            var rowSet = new Set();
+            var columnSet = new Set();
+            var gridSet = new Set();
+            for (var j = 0; j < 9; j++) {
+                // Check row
+                if (sudokuValues[i][j] !== 0 && rowSet.has(sudokuValues[i][j])) {
+                    return false;
+                }
+                rowSet.add(sudokuValues[i][j]);
+
+                // Check column
+                if (sudokuValues[j][i] !== 0 && columnSet.has(sudokuValues[j][i])) {
+                    return false;
+                }
+                columnSet.add(sudokuValues[j][i]);
+
+                // Check 3x3 grid
+                var row = Math.floor(i / 3) * 3 + Math.floor(j / 3);
+                var col = (i % 3) * 3 + (j % 3);
+                if (sudokuValues[row][col] !== 0 && gridSet.has(sudokuValues[row][col])) {
+                    return false;
+                }
+                gridSet.add(sudokuValues[row][col]);
+            }
+        }
+        return true;
+    }
+
+    function solveSudokuHelper(sudokuValues) {
+        for (var row = 0; row < 9; row++) {
+            for (var col = 0; col < 9; col++) {
+                if (sudokuValues[row][col] === 0) {
+                    for (var num = 1; num <= 9; num++) {
+                        if (isValidPlacement(sudokuValues, row, col, num)) {
+                            sudokuValues[row][col] = num;
+                            if (solveSudokuHelper(sudokuValues)) {
+                                return true;
+                            }
+                            sudokuValues[row][col] = 0;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function isValidPlacement(sudokuValues, row, col, num) {
+        for (var i = 0; i < 9; i++) {
+            if (sudokuValues[row][i] === num || sudokuValues[i][col] === num) {
+                return false;
+            }
+        }
+        var startRow = Math.floor(row / 3) * 3;
+        var startCol = Math.floor(col / 3) * 3;
+        for (var i = startRow; i < startRow + 3; i++) {
+            for (var j = startCol; j < startCol + 3; j++) {
+                if (sudokuValues[i][j] === num) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Create Sudoku grid when the page loads
+    window.onload = createSudokuGrid;
+</script>
+
+</body>
+</html>
